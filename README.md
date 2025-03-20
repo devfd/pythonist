@@ -38,6 +38,22 @@ Install Ruff as a development dependency using `uv`:
 uv add --dev ruff # install ruff in the dev dependencies group
 ```
 
+**Configuring Ruff:**
+
+Ruff comes with great default settings. However you might want to tweak it to your specific needs. Simply add necessary sections in `pyproject.toml` (refer to the [Ruff settings documentation](https://docs.astral.sh/ruff/settings/) page for more info)
+
+```toml
+[tool.ruff]
+exclude = ["alembic"]
+line-length = 120
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+```
+
 ### 1.3. Setting up VSCode for Python
 
 Here are the minimal recommended extensions to have a great development experience:
