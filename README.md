@@ -38,6 +38,16 @@ Install Ruff as a development dependency using `uv`:
 uv add --dev ruff # install ruff in the dev dependencies group
 ```
 
+**Managing outdated dependencies:**
+
+You can locally list and update outdated dependencies using `uv tree`:
+
+```bash
+uv tree --depth 1 --outdated
+```
+
+You should setup [Rennovate](https://docs.astral.sh/uv/guides/integration/dependency-bots/#renovate) to automatically upgrade dependencies.
+
 **Configuring Ruff:**
 
 Ruff comes with great default settings. However you might want to tweak it to your specific needs. Simply add necessary sections in `pyproject.toml` (refer to the [Ruff settings documentation](https://docs.astral.sh/ruff/settings/) page for more info)
