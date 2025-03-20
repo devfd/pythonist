@@ -1,6 +1,6 @@
 # Pythonist <!-- omit in toc -->
 
-Your short, to the point, little guide for writing modern Python and improving on the outdated code LLMs seem to be stuck on.
+Your short, to the point guide for writing modern Python and improving on the outdated code LLMs seem to be stuck on.
 
 - [1. Tooling](#1-tooling)
   - [1.1. Package Management with uv](#11-package-management-with-uv)
@@ -60,5 +60,22 @@ To make the most of these tools, configure your `.vscode/settings.json` file:
 ```
 
 It's highly recommended to commit the `.vscode/settings.json` file to your project repository to ensure that everyone on the team uses the same consistent development settings.
+
+**Working in monorepos:**
+
+If your Python codebase is within a subfolder of a larger monorepo, VSCode offers a couple of approaches for proper configuration. You can either use VSCode's multi-root workspace feature to treat each subfolder as an independent project, or you can customize your workspace-level `.vscode/settings.json` to setup your Python code's location.
+
+For exemple, assuming your python code is in a `server` subfolder:
+
+```.vscode/settings.json
+{
+  "python.defaultInterpreterPath": "./server/.venv/bin/python",
+  "ruff.configuration": "./server/pyproject.toml",
+  "mypy-type-checker.cwd": "${workspaceFolder}/server",
+  "mypy-type-checker.args": ["--config-file", "pyproject.toml"],
+  "python.analysis.extraPaths": ["${workspaceFolder}/server"],
+  "python.autoComplete.extraPaths": ["${workspaceFolder}/server"]
+}
+```
 
 ## 2. Typings
