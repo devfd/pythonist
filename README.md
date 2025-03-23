@@ -1,18 +1,19 @@
 # Pythonist <!-- omit in toc -->
 
-Your short, to the point guide for writing modern Python and improving on the outdated code LLMs seem to be stuck on.
+Your short, to the point guide for writing modern Python code.
 
-- [1. Tooling](#1-tooling)
+- [1. Developer Experience](#1-developer-experience)
   - [1.1. Package Management with uv](#11-package-management-with-uv)
   - [1.2. Linting \& Formatting with Ruff](#12-linting--formatting-with-ruff)
-  - [1.3. Setting up VSCode for Python](#13-setting-up-vscode-for-python)
+  - [1.3. Testing](#13-testing)
+  - [1.4. Setting up VSCode for Python](#14-setting-up-vscode-for-python)
 - [2. Typings](#2-typings)
 
-## 1. Tooling
+## 1. Developer Experience
 
 ### 1.1. Package Management with uv
 
-Simply use [uv](https://docs.astral.sh/uv/): it's ultra fast and comes with many great features, like workspaces, or bytecode compilation to boost startup times.
+[uv](https://docs.astral.sh/uv/) is ultra fast, makes managing virtual environments easy, and comes with many great features, like workspaces, or bytecode compilation to boost startup times.
 
 To start using `uv` in your project, simply run:
 
@@ -28,16 +29,6 @@ To maintain a clean and lightweight Docker image for deployment, install develop
 uv add --dev <dev-dependency-name>
 ```
 
-### 1.2. Linting & Formatting with Ruff
-
-Use [ruff](https://docs.astral.sh/ruff/): it's incredibly fast *and* combines the functionalities of Black (formatter), isort (import sorter), and Flake8 (linter) into a single tool.
-
-Install Ruff as a development dependency using `uv`:
-
-```bash
-uv add --dev ruff # install ruff in the dev dependencies group
-```
-
 **Managing outdated dependencies:**
 
 You can locally list and update outdated dependencies using `uv tree`:
@@ -48,9 +39,19 @@ uv tree --depth 1 --outdated
 
 You should setup [Rennovate](https://docs.astral.sh/uv/guides/integration/dependency-bots/#renovate) to automatically upgrade dependencies.
 
+### 1.2. Linting & Formatting with Ruff
+
+[ruff](https://docs.astral.sh/ruff/) is incredibly fast and combines the functionalities of Black (formatter), isort (import sorter), and Flake8 (linter) into a single tool.
+
+Install Ruff as a development dependency using `uv`:
+
+```bash
+uv add --dev ruff # install ruff in the dev dependencies group
+```
+
 **Configuring Ruff:**
 
-Ruff comes with great default settings. However you might want to tweak it to your specific needs. Simply add necessary sections in `pyproject.toml` (refer to the [Ruff settings documentation](https://docs.astral.sh/ruff/settings/) page for more info)
+Ruff comes with great default settings, however to tweak it to your specific needs, simply add necessary sections in your `pyproject.toml` (refer to the [Ruff settings documentation](https://docs.astral.sh/ruff/settings/) page for more info)
 
 ```toml
 [tool.ruff]
@@ -64,7 +65,35 @@ fixable = ["ALL"]
 quote-style = "double"
 ```
 
-### 1.3. Setting up VSCode for Python
+### 1.3. Testing
+
+Testing is essential and should be part of every Python project. [Pytest](https://docs.pytest.org/en/stable/) is the recommended testing framework. You should also install the [code coverage extension](https://pytest-cov.readthedocs.io/en/latest/) along with Pytest:
+
+```bash
+uv add --dev pytest pytest-cov
+```
+
+**On naming test files:**
+
+Pytest offers flexibility in test file organization. A clean approach is to place test files alongside your source code, named like `test_*.py` or `*_test.py.`
+
+**Automatic coverage:**
+
+For immediate feedback on test coverage, configure pytest-cov directly in your `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning"]
+addopts = "--cov=. --cov-report html"
+
+[tool.coverage.run]
+omit = ["*_test.py"]
+```
+
+This setup will automatically generate an HTML coverage report in your project's htmlcov directory whenever you run pytest.
+
+
+### 1.4. Setting up VSCode for Python
 
 Here are the minimal recommended extensions to have a great development experience:
 
