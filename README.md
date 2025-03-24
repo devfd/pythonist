@@ -6,12 +6,14 @@ Your short, to the point guide for writing modern Python code.
   - [1.1. Package Management with uv](#11-package-management-with-uv)
   - [1.2. Linting \& Formatting with Ruff](#12-linting--formatting-with-ruff)
   - [1.3. Testing](#13-testing)
-  - [1.4. Setting up VSCode for Python](#14-setting-up-vscode-for-python)
+  - [1.4. Setting up VSCode](#14-setting-up-vscode)
 - [2. Typings](#2-typings)
   - [2.1. Setup](#21-setup)
   - [2.2. Common types](#22-common-types)
   - [2.3. Object or Any](#23-object-or-any)
-  - [2.4. Keeping up-to-date](#24-keeping-up-to-date)
+  - [2.4. Functions](#24-functions)
+  - [2.5. Custom types](#25-custom-types)
+  - [2.6. Keeping up-to-date](#26-keeping-up-to-date)
 
 ## 1. Developer Experience
 
@@ -96,8 +98,7 @@ omit = ["*_test.py"]
 
 This setup will automatically generate an HTML coverage report in your project's htmlcov directory whenever you run pytest.
 
-
-### 1.4. Setting up VSCode for Python
+### 1.4. Setting up VSCode
 
 Here are the minimal recommended extensions to have a great development experience:
 
@@ -166,7 +167,7 @@ Refer to [mypy documentation page](https://mypy.readthedocs.io/en/stable/config_
 
 ### 2.2. Common types
 
-Python's type hinting system includes built-in support for commonly used types. Here’s a quick overview:
+Python's type system includes built-in support for commonly used types. Here’s a quick overview:
 
 - `str`: for strings.
 - `int`: for integers.
@@ -197,37 +198,134 @@ knight_in_service: str | None = "Sir Reginald"  # either str or None
 
 While MyPy can often infer types from assigned values, declaring types clearly, as shown in the example, greatly enhances code readability. It's a recommended practice for maintainable Python.
 
-**Runtime Behavior:**
+**Runtime behavior:**
 
-Remember, type hints are primarily for static analysis by tools like MyPy and are **not enforced at runtime**. They serve as valuable documentation and aid in catching errors before execution.
+Remember, type hints are primarily for static analysis by tools like MyPy and are **not enforced at runtime**.
+
+You need an additional library to enforce types at runtime, like [typeguard](https://github.com/agronholm/typeguard).
 
 ### 2.3. Object or Any
 
-For better type safety you should prefer specific types and avoid using `object` or `Any`. If for some reasons you need an escape-hatch or types are truly unknown (or dynamic) consider:
+You should avoid using `object` or `Any`. If for some reasons you need an escape hatch or types are truly unknown (or dynamic) consider:
 
-- `Any`: Effectively disables type checking. Any operations are permitted on the value.
 - `object`:  Base class for all classes. Only universally supported operations are allowed, offering some type safety.
+- `Any`: Effectively disables type checking. Any operations are permitted on the value.
 
 ```python
 from typing import Any
 
-# Using Any
-flexible_attribute: Any = "Royal Decree"
-flexible_attribute = 42  # Reassigning to an integer - perfectly valid with Any
-print(flexible_attribute.upper()) # No type error initially, runtime error if type is not str
-flexible_attribute + 10 # No type error, even if 'flexible_attribute' is a string later
-
-# Using object
+# using object
 vague_attribute: object = "Crown Jewel"
 vague_attribute = 3.14 # Reassigning to a float - also valid with object
 print(vague_attribute.upper()) # Static type error! 'object' has no attribute 'upper'
 vague_attribute + 5 # Static type error!  Binary operation "+" not defined for 'object' and 'int'
 print(vague_attribute.__str__()) # Okay - __str__ is a universal method for objects
 print(type(vague_attribute)) # Okay - type() works for all objects
+
+# using Any
+flexible_attribute: Any = "Royal Decree"
+flexible_attribute = 42  # Reassigning to an integer - perfectly valid with Any
+print(flexible_attribute.upper()) # No type error initially, runtime error if type is not str
+flexible_attribute + 10 # No type error, even if 'flexible_attribute' is a string later
 ```
 
-### 2.4. Keeping up-to-date
+### 2.4. Functions
 
-Python's type hinting system is continuously evolving, with new features and improvements introduced in each Python release.
+In strict mode, mypy will enforce you to type both function arguments and return values.
 
-[The PEP (Python Enhancement Proposal) index for typing](https://peps.python.org/topic/typing/) details all the past, present, and future proposals related to typing. Following these PEPs will give you insight into upcoming features and the rationale behind existing ones.
+Here is how you would type a function:
+
+```python
+def calculate_sum(numbers: list[int]) -> int:
+    return sum(numbers)
+```
+
+**Explicit None Return Type:**
+
+For functions that don't explicitly return a value, it's best practice to explicitly annotate the return type as None.
+
+```python
+def process_data(data: list[str]) -> None:
+    # ... process the data ...
+```
+
+**Prefer immutable containers for arguments:**
+
+When a function is designed not to modify its input arguments, using immutable container types in the function signature is highly recommended.
+
+- `list[item_type]`: use `typing.Sequence[item_type]`, if you need random access via my_list[id] or `typing.Iterable[item_type]` if you are just iterating over the list.
+- `dict[key_type, value_type]`: use `typing.Mapping[key_type, value_type]`, if you need random access via my_dict[key] or `typing.Iterable[tuple[key_type, value_type]]` if you are just iterating over the dictionary
+- `set[item_type]`: use `typing.AbstractSet[item_type]`
+
+**Type Narrowing with typing.TypeIs:**
+
+A function returning a bool value can be used to narrow the type of a variable.
+
+ `TypeIs` can narrow the type in both the if and else branches of a conditional.
+
+From the Python [documentation](https://typing.python.org/en/latest/spec/narrowing.html#typeis):
+
+```python
+from typing import TypeIs, assert_type
+
+def is_str(x: object) -> TypeIs[str]:
+    return isinstance(x, str)
+
+def f(x: str | int) -> None:
+    if is_str(x):
+        assert_type(x, str)
+    else:
+        assert_type(x, int)
+```
+
+### 2.5. Custom types
+
+Python's typing system isn't limited to built-in types. You can define your own custom types for increased clarity and type safety.
+
+**Litterals:**
+
+Use Literal to restrict a variable to a specific set of literal values (strings, numbers, booleans). Great for configuration options or constrained inputs.
+
+```python
+from typing import Literal
+
+def set_log_level(level: Literal["DEBUG", "INFO", "WARNING", "ERROR"]) -> None:
+    if level == "DEBUG":
+```
+
+**Enums:**
+
+For a more structured way to represent a fixed set of named values, use Enum from the enum module. Enums are more readable and maintainable than using plain strings or magic numbers.
+
+```python
+class UserRole(str, Enum): # Inherit from str for easy JSON serialization
+    ADMIN = "admin"
+    EDITOR = "editor"
+    VIEWER = "viewer"
+
+def grant_permission(role: UserRole) -> None:
+    if role == UserRole.ADMIN:
+```
+
+**Classes:**
+
+Classes themselves act as custom types. When you define a class, you're creating a new type. Use class names directly as type hints.
+
+**Type alias:**
+
+Create type aliases to give descriptive names to complex types, improving readability, especially for nested or repetitive type hints.
+
+```python
+type UserProfileData = Dict[str, List[Tuple[str, int]]]
+
+user_data: UserProfileData = {
+    "alice": [("login_count", 5), ("last_activity", 1678886400)],
+    "bob": [("login_count", 12), ("last_activity", 1678972800)],
+}
+```
+
+### 2.6. Keeping up-to-date
+
+Typings are continuously evolving, with features introduced in each new Python release.
+
+[The PEP (Python Enhancement Proposal) index for typing](https://peps.python.org/topic/typing/) is a great place to keep an eye on upcoming features and understand the rationale behind existing ones.
