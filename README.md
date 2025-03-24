@@ -8,6 +8,10 @@ Your short, to the point guide for writing modern Python code.
   - [1.3. Testing](#13-testing)
   - [1.4. Setting up VSCode for Python](#14-setting-up-vscode-for-python)
 - [2. Typings](#2-typings)
+  - [2.1. Setup](#21-setup)
+  - [2.2. Common types](#22-common-types)
+  - [2.3. Object or Any](#23-object-or-any)
+  - [2.4. Keeping up-to-date](#24-keeping-up-to-date)
 
 ## 1. Developer Experience
 
@@ -99,7 +103,7 @@ Here are the minimal recommended extensions to have a great development experien
 
 - [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
 - [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
-- [MyPY](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker)
+- [mypy](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker)
 
 To make the most of these tools, configure your `.vscode/settings.json` file:
 
@@ -134,3 +138,96 @@ For exemple, assuming your python code is in a `server` subfolder:
 ```
 
 ## 2. Typings
+
+Typing is also essential and should be part of every Python project. It makes refactoring easier, catches errors early, and improves code readability for everyone (including LLMs!).
+
+### 2.1. Setup
+
+Add mypy to your project:
+
+```bash
+uv add --dev mypy
+```
+
+**Configuring mypy:**
+
+To tweak mypy settings, add a section to your `pyproject.toml`:
+
+```toml
+[tool.mypy]
+strict = true
+strict_optional = true
+warn_return_any = true
+warn_unreachable = true
+exclude = [".venv"]
+```
+
+Refer to [mypy documentation page](https://mypy.readthedocs.io/en/stable/config_file.html#example-pyproject-toml) for more info.
+
+### 2.2. Common types
+
+Python's type hinting system includes built-in support for commonly used types. Here’s a quick overview:
+
+- `str`: for strings.
+- `int`: for integers.
+- `float`: for floating-point numbers.
+- `bool`: for booleans.
+- `list[item_type]`: for lists containing items of item_type.
+- `dict[key_type, value_type]`: for dictionaries.
+- `tuple[type1, type2]`: for tuples of fixed size.
+- `tuple[type1, ...]`: for tuples of variable size.
+- `set[item_type]`: for sets.
+- `type1 | type2:` union type, for when a value can be one of a few types.
+- `type | None`: optional type, for a value that can be none.
+
+```python
+name: str = "Alice" # string
+age: int = 30 # integer
+crown_jewel_weight_kg: float = 4.2 # float
+is_rebel: bool = True # boolean
+royal_titles: list[str] = ["Princess of the forest", "Duchess of the sea"] # list of strings
+known_languages: dict[str, str] = {"elvish": "fluent", "common": "native"} # dict
+garden_dimensions: tuple[str, int, int] = ("METER", 36, 6) # fixed-size typle
+favorite_numbers: tuple[int, ...] = (7, 13, 21, 34) # variable-size typle
+castle_rooms: set[str] = {"throne_room", "ballroom", "library"} # set
+knight_in_service: str | None = "Sir Reginald"  # either str or None
+```
+
+**Type inference:**
+
+While MyPy can often infer types from assigned values, declaring types clearly, as shown in the example, greatly enhances code readability. It's a recommended practice for maintainable Python.
+
+**Runtime Behavior:**
+
+Remember, type hints are primarily for static analysis by tools like MyPy and are **not enforced at runtime**. They serve as valuable documentation and aid in catching errors before execution.
+
+### 2.3. Object or Any
+
+For better type safety you should prefer specific types and avoid using `object` or `Any`. If for some reasons you need an escape-hatch or types are truly unknown (or dynamic) consider:
+
+- `Any`: Effectively disables type checking. Any operations are permitted on the value.
+- `object`:  Base class for all classes. Only universally supported operations are allowed, offering some type safety.
+
+```python
+from typing import Any
+
+# Using Any
+flexible_attribute: Any = "Royal Decree"
+flexible_attribute = 42  # Reassigning to an integer - perfectly valid with Any
+print(flexible_attribute.upper()) # No type error initially, runtime error if type is not str
+flexible_attribute + 10 # No type error, even if 'flexible_attribute' is a string later
+
+# Using object
+vague_attribute: object = "Crown Jewel"
+vague_attribute = 3.14 # Reassigning to a float - also valid with object
+print(vague_attribute.upper()) # Static type error! 'object' has no attribute 'upper'
+vague_attribute + 5 # Static type error!  Binary operation "+" not defined for 'object' and 'int'
+print(vague_attribute.__str__()) # Okay - __str__ is a universal method for objects
+print(type(vague_attribute)) # Okay - type() works for all objects
+```
+
+### 2.4. Keeping up-to-date
+
+Python's type hinting system is continuously evolving, with new features and improvements introduced in each Python release.
+
+[The PEP (Python Enhancement Proposal) index for typing](https://peps.python.org/topic/typing/) details all the past, present, and future proposals related to typing. Following these PEPs will give you insight into upcoming features and the rationale behind existing ones.
